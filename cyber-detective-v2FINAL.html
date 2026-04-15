@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Detectives: The Emma Case</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Oxanium:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c14;
+  --panel: #0c1220;
+  --panel2: #101828;
+  --border: #162440;
+  --accent: #00c8ff;
+  --accent2: #ff5f1f;
+  --green: #00ff88;
+  --danger: #ff2d55;
+  --warn: #ffd60a;
+  --text: #b8cfe0;
+  --text-dim: #4a6a88;
+  --solved: #00ff88;
+  --red: #ff375f;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  font-family: 'Oxanium', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,200,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,200,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events:none; z-index:0;
+}
+
+/* INTRO */
+#intro {
+  position:fixed; inset:0; z-index:1000;
+  background:var(--bg);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center; padding:2rem;
+}
+.intro-eyebrow {
+  font-family:'Share Tech Mono', monospace;
+  font-size:0.72rem; letter-spacing:0.35em;
+  color:var(--accent); border:1px solid rgba(0,200,255,0.4);
+  padding:0.35rem 1rem; margin-bottom:2rem;
+  animation:glowborder 2.5s ease-in-out infinite;
+}
+@keyframes glowborder {
+  0%,100%{box-shadow:0 0 6px rgba(0,200,255,0.3)}
+  50%{box-shadow:0 0 22px rgba(0,200,255,0.6),0 0 40px rgba(0,200,255,0.2)}
+}
+.intro-h1 {
+  font-family:'Orbitron', monospace;
+  font-size:clamp(2.2rem,7vw,5rem);
+  font-weight:900; color:#fff; line-height:1; margin-bottom:0.5rem;
+}
+.intro-h1 em { color:var(--accent); font-style:normal; }
+.intro-case {
+  font-family:'Share Tech Mono', monospace;
+  font-size:0.85rem; color:var(--accent2);
+  letter-spacing:0.2em; margin-bottom:2.5rem;
+}
+.briefing {
+  max-width:580px; text-align:left;
+  background:var(--panel); border:1px solid var(--border);
+  border-left:3px solid var(--accent2);
+  padding:1.5rem 1.8rem; margin-bottom:2.5rem;
+}
+.briefing-label {
+  font-family:'Share Tech Mono', monospace;
+  font-size:0.65rem; letter-spacing:0.2em;
+  color:var(--accent2); margin-bottom:0.9rem;
+}
+.briefing p { font-size:0.9rem; line-height:1.75; color:var(--text); }
+.briefing strong { color:var(--accent); }
+.briefing-tasks { margin-top:1rem; list-style:none; }
+.briefing-tasks li {
+  font-family:'Share Tech Mono', monospace;
+  font-size:0.78rem; color:var(--text-dim);
+  padding:0.3rem 0 0.3rem 1.4rem; position:relative;
+}
+.briefing-tasks li::before { content:'▸'; position:absolute; left:0; color:var(--accent); }
+.intro-tip {
+  max-width:580px;
+  background:rgba(255,214,10,0.07); border:1px solid rgba(255,214,10,0.3);
+  padding:0.9rem 1.2rem; margin-bottom:2rem;
+  font-family:'Share Tech Mono', monospace; font-size:0.72rem;
+  color:var(--warn); line-height:1.6; text-align:left;
+}
+.intro-tip strong { color:#ffe066; }
+.start-btn {
+  font-family:'Orbitron', monospace;
+  font-size:0.95rem; font-weight:700;
+  letter-spacing:0.2em; color:#000;
+  background:var(--accent); border:none;
+  padding:1rem 3.5rem; cursor:pointer;
+  clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%);
+  transition:all 0.2s;
+}
+.start-btn:hover { background:#fff; box-shadow:0 0 35px var(--accent); transform:translateY(-2px); }
+
+/* MAIN */
+#app { display:none; position:relative; z-index:1; min-height:100vh; }
+.topbar {
+  background:var(--panel); border-bottom:1px solid var(--border);
+  padding:0.7rem 1.4rem;
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:200;
+}
+.topbar-left { display:flex; align-items:center; gap:1rem; }
+.det-badge { font-family:'Share Tech Mono', monospace; font-size:0.7rem; color:var(--accent); letter-spacing:0.12em; }
+.case-lbl { font-family:'Share Tech Mono', monospace; font-size:0.75rem; color:var(--text-dim); }
+.dots { display:flex; gap:0.6rem; align-items:center; }
+.dot {
+  width:13px; height:13px; border-radius:50%;
+  border:2px solid var(--text-dim); transition:all 0.4s; position:relative;
+}
+.dot.lit { border-color:var(--solved); background:var(--solved); box-shadow:0 0 10px var(--solved); }
+.dot .dot-label {
+  position:absolute; top:18px; left:50%; transform:translateX(-50%);
+  font-family:'Share Tech Mono', monospace; font-size:0.55rem;
+  color:var(--text-dim); white-space:nowrap;
+}
+.content { display:grid; grid-template-columns:260px 1fr 300px; min-height:calc(100vh - 55px); }
+
+/* SIDEBAR */
+.sidebar { background:var(--panel); border-right:1px solid var(--border); padding:1.2rem 0; }
+.sb-title {
+  font-family:'Share Tech Mono', monospace;
+  font-size:0.6rem; letter-spacing:0.3em; color:var(--text-dim);
+  padding:0 1.3rem 0.9rem; border-bottom:1px solid var(--border); margin-bottom:0.8rem;
+}
+.sbitem {
+  padding:0.85rem 1.3rem; cursor:pointer;
+  display:flex; align-items:center; gap:0.75rem;
+  border-left:3px solid transparent; transition:all 0.18s;
+}
+.sbitem:hover { background:rgba(0,200,255,0.04); border-left-color:rgba(0,200,255,0.4); }
+.sbitem.active { background:rgba(0,200,255,0.07); border-left-color:var(--accent); }
+.sbitem.done { border-left-color:var(--solved) !important; }
+.sbitem-icon { font-size:1.25rem; width:22px; text-align:center; }
+.sbitem-name { font-size:0.88rem; font-weight:600; color:var(--text); }
+.sbitem-sub { font-family:'Share Tech Mono', monospace; font-size:0.65rem; color:var(--text-dim); }
+.sb-check { margin-left:auto; background:var(--solved); color:#000; font-family:'Orbitron', monospace; font-size:0.5rem; font-weight:700; padding:0.18rem 0.4rem; display:none; }
+.done .sb-check { display:block; }
+
+/* PHONE */
+.phone-wrap { display:flex; align-items:flex-start; justify-content:center; padding:1.8rem 1rem; background:var(--bg); }
+.phone {
+  width:380px; background:#0a0c10;
+  border:2px solid #1e2530; border-radius:42px; overflow:hidden;
+  box-shadow: 0 0 0 6px #111620, 0 0 0 8px #080c14, 0 35px 70px rgba(0,0,0,0.6), 0 0 50px rgba(0,200,255,0.07);
+}
+.phone-notch { background:#000; height:26px; display:flex; align-items:center; justify-content:center; }
+.phone-notch-pill { width:110px; height:18px; background:#000; border:1px solid #1a1a1a; border-top:none; border-radius:0 0 14px 14px; }
+.phone-status { background:#000; padding:3px 16px 5px; display:flex; justify-content:space-between; font-family:'Share Tech Mono', monospace; font-size:0.68rem; color:#fff; }
+.phone-body { min-height:660px; overflow-y:auto; }
+.phone-body::-webkit-scrollbar { width:3px; }
+.phone-body::-webkit-scrollbar-thumb { background:var(--border); }
+.scr { display:none; }
+.scr.on { display:block; }
+
+/* HOME */
+.home-bg { background:linear-gradient(160deg, #0d1b3e 0%, #1a0d2e 50%, #001428 100%); min-height:660px; padding:2rem 1.3rem; }
+.home-time { font-family:'Orbitron', monospace; font-size:3.5rem; font-weight:700; color:#fff; text-align:center; }
+.home-date { text-align:center; font-size:0.8rem; color:rgba(255,255,255,0.5); margin-bottom:1.5rem; }
+.lock-notif {
+  background:rgba(255,255,255,0.12); backdrop-filter:blur(8px);
+  border-radius:14px; padding:0.75rem 1rem; margin-bottom:0.6rem;
+  display:flex; gap:0.7rem; align-items:flex-start;
+  cursor:pointer; transition:background 0.15s;
+}
+.lock-notif:hover { background:rgba(255,255,255,0.18); }
+.lock-notif-app { font-size:0.6rem; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:0.1em; }
+.lock-notif-text { font-size:0.78rem; color:#fff; line-height:1.4; margin-top:0.1rem; }
+.apps-divider { text-align:center; font-family:'Share Tech Mono', monospace; font-size:0.6rem; color:rgba(255,255,255,0.25); letter-spacing:0.2em; margin:1.2rem 0 0.8rem; }
+.app-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; }
+.appico { display:flex; flex-direction:column; align-items:center; gap:0.4rem; cursor:pointer; transition:transform 0.18s; }
+.appico:hover { transform:scale(1.08); }
+.appico-face { width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.7rem; position:relative; }
+.appico-lbl { font-size:0.63rem; color:#fff; text-align:center; }
+.badge-num { position:absolute; top:-5px; right:-5px; background:var(--danger); color:#fff; font-size:0.55rem; font-weight:700; min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 3px; }
+
+/* SOCIAL */
+.social-scr { background:#f0f2f5; color:#000; font-family:-apple-system,'Helvetica Neue',sans-serif; min-height:660px; }
+.fb-bar { background:#1877f2; padding:0.7rem 1rem; font-size:1.2rem; font-weight:900; color:#fff; letter-spacing:-0.02em; }
+.profile-banner { height:90px; background:linear-gradient(120deg,#4776e6,#8e54e9); }
+.prof-section { padding:0 1rem 1rem; }
+.prof-av { width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg,#f093fb,#f5576c); border:3px solid #fff; margin-top:-36px; display:flex; align-items:center; justify-content:center; font-size:2.2rem; }
+.prof-name { font-size:1.15rem; font-weight:800; color:#050505; margin-top:0.5rem; }
+.prof-bio { font-size:0.82rem; color:#444; line-height:1.55; margin-top:0.3rem; }
+.hl { cursor:pointer; border-bottom:2px dotted #f6a623; }
+.hl:hover { color:#d67c00; }
+.hl-collected { background:#fff3cd; border-bottom:2px solid #f6a623; border-radius:3px; padding:0 2px; color:#856404; font-weight:700; cursor:default; }
+.prof-stats { display:flex; gap:1.5rem; margin-top:0.8rem; padding-top:0.7rem; border-top:1px solid #e0e0e0; }
+.pstat-n { font-weight:800; font-size:0.95rem; color:#050505; }
+.pstat-l { font-size:0.7rem; color:#777; }
+.post { border:1px solid #ddd; border-radius:10px; margin:0.7rem 0.8rem; overflow:hidden; background:#fff; }
+.post-hd { display:flex; align-items:center; gap:0.5rem; padding:0.6rem 0.8rem; }
+.post-av { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#f093fb,#f5576c); display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+.post-who { font-weight:700; font-size:0.8rem; }
+.post-when { font-size:0.68rem; color:#777; margin-left:auto; }
+.post-body { padding:0 0.8rem 0.7rem; font-size:0.82rem; color:#333; line-height:1.55; }
+.post-acts { display:flex; gap:0.8rem; padding:0.45rem 0.8rem; border-top:1px solid #f0f0f0; font-size:0.72rem; color:#777; }
+.social-puzzle { background:#fff; border:2px solid #1877f2; border-radius:10px; margin:0.8rem; padding:1rem; font-size:0.82rem; }
+.spuz-title { color:#1877f2; font-weight:700; font-size:0.88rem; margin-bottom:0.5rem; }
+.spuz-q { color:#333; line-height:1.55; margin-bottom:0.8rem; }
+.crack-steps { display:flex; flex-direction:column; gap:0.5rem; }
+.crack-step { background:#f0f4ff; border:1px solid #c5d5ff; border-radius:6px; padding:0.6rem 0.8rem; font-size:0.78rem; color:#333; }
+.crack-step label { display:block; font-weight:700; color:#1877f2; margin-bottom:0.3rem; }
+.crack-inp { width:100%; border:1px solid #bbb; border-radius:4px; padding:0.4rem 0.6rem; font-size:0.82rem; font-family:inherit; }
+.crack-btn { background:#1877f2; color:#fff; border:none; border-radius:4px; padding:0.5rem 1rem; font-size:0.78rem; font-weight:700; cursor:pointer; margin-top:0.5rem; width:100%; }
+.crack-btn:hover { background:#1558b0; }
+.crack-step.unlocked { border-color:#00aa44; background:#efffef; }
+.crack-step.locked { opacity:0.4; pointer-events:none; }
+.crack-result { font-size:0.78rem; font-weight:700; margin-top:0.4rem; padding:0.3rem 0.5rem; border-radius:3px; display:none; }
+.crack-result.ok { background:#d4edda; color:#155724; display:block; }
+.crack-result.no { background:#f8d7da; color:#721c24; display:block; }
+
+/* MESSAGES */
+.msg-scr { background:#f0f0f5; font-family:-apple-system,'Helvetica Neue',sans-serif; min-height:660px; }
+.msg-bar { background:#f7f7f7; border-bottom:1px solid #ddd; padding:0.8rem 1rem; display:flex; align-items:center; gap:0.5rem; }
+.msg-bar h2 { font-size:1rem; font-weight:700; color:#000; }
+.conv-item { display:flex; align-items:center; gap:0.8rem; padding:0.75rem 1rem; background:#fff; border-bottom:1px solid #eee; cursor:pointer; transition:background 0.12s; }
+.conv-item:hover { background:#f5f5f5; }
+.conv-av { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
+.conv-name { font-weight:700; font-size:0.88rem; color:#000; }
+.conv-prev { font-size:0.78rem; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+.conv-t { font-size:0.68rem; color:#aaa; margin-left:auto; flex-shrink:0; }
+.chat { background:#f0f0f5; min-height:660px; display:flex; flex-direction:column; }
+.chat-hd { background:#fff; border-bottom:1px solid #ddd; padding:0.75rem 1rem; display:flex; align-items:center; gap:0.8rem; }
+.back { font-size:1rem; color:#007AFF; cursor:pointer; font-weight:600; }
+.chat-name { font-weight:700; font-size:0.92rem; color:#000; }
+.chat-status { font-size:0.68rem; color:#888; }
+.chat-msgs { flex:1; padding:0.9rem 0.8rem; display:flex; flex-direction:column; gap:0.5rem; }
+.bubble { max-width:82%; padding:0.55rem 0.85rem; border-radius:18px; font-size:0.82rem; line-height:1.45; }
+.bubble.out { align-self:flex-end; background:#007AFF; color:#fff; border-bottom-right-radius:4px; }
+.bubble.in { align-self:flex-start; background:#fff; color:#000; border-bottom-left-radius:4px; box-shadow:0 1px 2px rgba(0,0,0,0.08); }
+.bubble.flagged { background:#fff8e1 !important; color:#333 !important; border:1.5px dashed #ffa000 !important; border-bottom-left-radius:4px; }
+.flag-tag { display:inline-block; background:#ffa000; color:#000; font-size:0.6rem; font-weight:700; padding:1px 5px; border-radius:2px; margin-bottom:3px; }
+.btime { font-size:0.62rem; color:rgba(255,255,255,0.55); text-align:right; margin-top:2px; }
+.bubble.in .btime { color:#bbb; }
+.msg-puzzle { background:#fff; border-top:2px solid #ea4335; padding:1rem; }
+.msg-puz-title { color:#ea4335; font-weight:700; font-size:0.88rem; margin-bottom:0.5rem; }
+.multi-q { display:flex; flex-direction:column; gap:0.6rem; }
+.mq-item { background:#fff5f5; border:1px solid #ffcdd2; border-radius:6px; padding:0.6rem; font-size:0.78rem; }
+.mq-item label { display:block; font-weight:700; color:#c62828; margin-bottom:0.3rem; }
+.mq-opts { display:flex; flex-direction:column; gap:0.3rem; margin-top:0.3rem; }
+.mq-opt { display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0.5rem; border-radius:4px; cursor:pointer; transition:background 0.15s; font-size:0.78rem; border:1px solid #ddd; background:#fff; color:#222; }
+.mq-opt:hover { background:#ffecec; }
+.mq-opt.correct-pick { background:#d4edda !important; border-color:#c3e6cb !important; }
+.mq-opt.wrong-pick { background:#f8d7da !important; border-color:#f5c6cb !important; }
+.mq-submit { background:#ea4335; color:#fff; border:none; border-radius:4px; padding:0.5rem 1rem; font-size:0.78rem; font-weight:700; cursor:pointer; margin-top:0.5rem; width:100%; }
+.mq-submit:hover:not(:disabled) { background:#b71c1c; }
+.mq-submit:disabled { opacity:0.4; cursor:not-allowed; }
+.mq-result { margin-top:0.5rem; font-size:0.8rem; font-weight:700; padding:0.4rem 0.6rem; border-radius:4px; display:none; }
+.mq-result.ok { background:#d4edda; color:#155724; display:block; }
+.mq-result.no { background:#f8d7da; color:#721c24; display:block; }
+
+/* EMAIL */
+.email-scr { background:#fff; color:#000; font-family:-apple-system,'Helvetica Neue',sans-serif; min-height:660px; }
+.email-bar { background:#ea4335; color:#fff; padding:0.75rem 1rem; font-size:0.95rem; font-weight:700; display:flex; align-items:center; gap:0.5rem; }
+.eitem { padding:0.75rem 1rem; border-bottom:1px solid #eee; cursor:pointer; transition:background 0.12s; }
+.eitem:hover { background:#f9f9f9; }
+.eitem.phish { border-left:3px solid #ea4335; }
+.eitem.unread { border-left:3px solid #1a73e8; }
+.esender { font-weight:700; font-size:0.82rem; }
+.esubj { font-size:0.78rem; color:#333; margin-top:2px; }
+.eprev { font-size:0.72rem; color:#888; margin-top:2px; }
+.eview { padding:1rem; display:none; }
+.eview.on { display:block; }
+.ev-subj { font-size:1rem; font-weight:700; color:#000; margin-bottom:0.6rem; }
+.ev-meta { font-size:0.72rem; color:#666; line-height:1.9; margin-bottom:0.8rem; border-bottom:1px solid #eee; padding-bottom:0.7rem; }
+.ev-from-bad { background:#fce8e6; color:#c62828; padding:0 3px; border-radius:2px; font-weight:700; cursor:pointer; font-family:'Share Tech Mono',monospace; font-size:0.7rem; }
+.ev-body { font-size:0.82rem; line-height:1.7; color:#222; }
+.phish-link { color:#1a73e8; text-decoration:underline; cursor:pointer; font-weight:600; word-break:break-all; }
+.phish-link.sprung { color:#ea4335; background:#fce8e6; padding:0 3px; border-radius:2px; }
+/* Email inline tap styles */
+.phish-tap { cursor:pointer; border-bottom:2px dashed #ea4335; color:inherit; transition:background 0.15s; border-radius:2px; }
+.phish-tap:hover { background:#fce8e6; }
+.phish-tap.flagged { background:#fce8e6; border-bottom:2px solid #ea4335; color:#c62828; font-weight:700; }
+.phish-callout { display:none; background:#fce8e6; border-left:3px solid #ea4335; border-radius:0 6px 6px 0; padding:0.5rem 0.7rem; margin:0.4rem 0; font-size:0.75rem; color:#c62828; font-weight:600; line-height:1.5; }
+.phish-callout.show { display:block; }
+.phish-progress { font-size:0.72rem; color:#888; text-align:center; padding:0.5rem 0; }
+.phish-progress strong { color:#ea4335; }
+/* Final question */
+.email-final-q { background:#fff5f5; border:2px solid #ea4335; border-radius:8px; margin-top:1rem; padding:1rem; display:none; }
+.email-final-q.show { display:block; }
+.email-final-title { color:#ea4335; font-weight:700; font-size:0.85rem; margin-bottom:0.5rem; }
+.email-final-text { font-size:0.8rem; color:#333; margin-bottom:0.7rem; line-height:1.5; }
+.email-q-opts { display:flex; flex-direction:column; gap:0.4rem; }
+.email-q-opt { border:1.5px solid #e0e0e0; border-radius:8px; padding:0.6rem 0.8rem; font-size:0.8rem; color:#222; cursor:pointer; background:#fff; font-family:inherit; text-align:left; transition:all 0.15s; line-height:1.4; }
+.email-q-opt:hover { border-color:#ea4335; background:#fff5f5; }
+.email-q-opt.right { border-color:#16a34a; background:#f0fdf4; color:#15803d; font-weight:700; pointer-events:none; }
+.email-q-opt.wrong { border-color:#ea4335; background:#fce8e6; color:#c62828; pointer-events:none; }
+.email-q-result { font-size:0.77rem; font-weight:600; margin-top:0.6rem; padding:0.5rem 0.7rem; border-radius:6px; display:none; line-height:1.5; }
+.email-q-result.ok { background:#f0fdf4; color:#15803d; border:1px solid #86efac; display:block; }
+.email-q-result.no { background:#fce8e6; color:#c62828; border:1px solid #fca5a5; display:block; }
+.warning-reveal { background:#fce8e6; border:1px solid #ea4335; border-radius:6px; padding:0.7rem; margin-top:0.6rem; font-size:0.75rem; color:#c62828; line-height:1.6; display:none; }
+.warning-reveal.show { display:block; }
+
+/* ======= BOPQUIZ APP ======= */
+.bq-scr { background:#f0f0f5; font-family:-apple-system,'Helvetica Neue',sans-serif; min-height:660px; }
+
+/* App header — bright, friendly, looks legit */
+.bq-header {
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  padding:1rem; text-align:center; color:#fff;
+}
+.bq-logo { font-size:2rem; margin-bottom:0.2rem; }
+.bq-app-name { font-size:1.1rem; font-weight:800; letter-spacing:-0.01em; }
+.bq-app-sub { font-size:0.72rem; opacity:0.8; margin-top:0.1rem; }
+
+/* Quiz questions (stage 1) */
+.bq-quiz { padding:1rem; }
+.bq-progress { display:flex; gap:0.3rem; margin-bottom:1rem; }
+.bq-prog-dot { flex:1; height:5px; border-radius:3px; background:#ddd; transition:background 0.3s; }
+.bq-prog-dot.done { background:#7c3aed; }
+.bq-q-card { background:#fff; border-radius:14px; padding:1rem; box-shadow:0 2px 8px rgba(0,0,0,0.08); margin-bottom:0.8rem; }
+.bq-q-num { font-size:0.65rem; font-weight:700; color:#a855f7; letter-spacing:0.1em; margin-bottom:0.4rem; }
+.bq-q-text { font-size:0.92rem; font-weight:700; color:#1a1a1a; margin-bottom:0.8rem; line-height:1.4; }
+.bq-options { display:flex; flex-direction:column; gap:0.45rem; }
+.bq-opt { border:2px solid #e5e7eb; border-radius:10px; padding:0.6rem 0.85rem; font-size:0.85rem; color:#333; cursor:pointer; transition:all 0.15s; background:#fff; text-align:left; }
+.bq-opt:hover { border-color:#a855f7; background:#faf5ff; }
+.bq-opt.picked { border-color:#a855f7; background:#faf5ff; color:#6d28d9; font-weight:700; pointer-events:none; }
+.bq-opt.disabled { pointer-events:none; opacity:0.45; }
+
+/* Results wall */
+.bq-wall { display:none; }
+.bq-wall.show { display:block; }
+.bq-results-teaser {
+  background:linear-gradient(135deg,#7c3aed,#a855f7);
+  padding:1.1rem 1rem; text-align:center; color:#fff;
+}
+.bq-score-blur { font-size:2.8rem; font-weight:900; filter:blur(7px); opacity:0.7; margin-bottom:0.2rem; letter-spacing:0.05em; }
+.bq-score-label { font-size:0.75rem; opacity:0.85; }
+.bq-lock-icon { font-size:1.8rem; margin:0.5rem 0 0.2rem; }
+.bq-wall-title { font-size:0.95rem; font-weight:800; margin-bottom:0.15rem; }
+.bq-wall-sub { font-size:0.72rem; opacity:0.8; }
+
+/* Evidence review section */
+.bq-evidence-hdr {
+  background:#fff3cd; border-bottom:2px solid #ffc107;
+  padding:0.65rem 0.9rem; display:flex; align-items:center; gap:0.5rem;
+}
+.bq-evidence-hdr-icon { font-size:1rem; }
+.bq-evidence-hdr-text { font-size:0.75rem; font-weight:700; color:#856404; line-height:1.4; }
+
+/* Escalating request cards */
+.bq-requests { padding:0.8rem; display:flex; flex-direction:column; gap:0.6rem; }
+.bq-req-card {
+  background:#fff; border-radius:14px; overflow:hidden;
+  box-shadow:0 2px 10px rgba(0,0,0,0.08);
+  animation:slideIn 0.35s ease;
+}
+@keyframes slideIn {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.bq-req-top { padding:0.75rem 0.9rem 0.65rem; }
+.bq-req-label { font-size:0.62rem; font-weight:700; letter-spacing:0.06em; color:#a855f7; margin-bottom:0.4rem; text-transform:uppercase; }
+/* What Emma gave away */
+.bq-req-gave { display:flex; align-items:center; gap:0.6rem; background:#f8f4ff; border-radius:8px; padding:0.5rem 0.7rem; margin-bottom:0.35rem; }
+.bq-req-gave-label { font-size:0.65rem; color:#888; font-weight:600; white-space:nowrap; }
+.bq-req-gave-value { font-size:0.88rem; font-weight:800; color:#1a1a1a; }
+.bq-req-reason { font-size:0.7rem; color:#aaa; font-style:italic; }
+/* Rating buttons */
+.bq-req-btns { display:grid; grid-template-columns:1fr 1fr 1fr; border-top:1px solid #f0f0f0; }
+.bq-vote-btn {
+  padding:0.6rem 0.2rem; font-size:0.72rem; font-weight:700;
+  border:none; cursor:pointer; font-family:inherit;
+  transition:all 0.15s; background:#fff; line-height:1.3;
+}
+.bq-vote-btn.fine   { color:#6b7280; border-right:1px solid #f0f0f0; }
+.bq-vote-btn.maybe  { color:#6b7280; border-right:1px solid #f0f0f0; }
+.bq-vote-btn.far    { color:#6b7280; }
+.bq-vote-btn.fine:hover  { background:#f5f3ff; color:#7c3aed; }
+.bq-vote-btn.maybe:hover { background:#fffbeb; color:#d97706; }
+.bq-vote-btn.far:hover   { background:#fef2f2; color:#dc2626; }
+.bq-vote-btn:disabled { opacity:0.45; cursor:default; }
+.bq-req-reveal {
+  padding:0.55rem 0.9rem; font-size:0.75rem; font-weight:600;
+  line-height:1.45; display:none; border-top:1px solid #f0f0f0;
+}
+.bq-req-reveal.ok   { background:#f5f3ff; color:#5b21b6; }
+.bq-req-reveal.warn { background:#fff7ed; color:#c2410c; }
+.bq-req-reveal.bad  { background:#fef2f2; color:#dc2626; }
+.bq-done-btn { width:calc(100% - 1.6rem); margin:0 0.8rem 0.8rem; display:block; padding:0.7rem; border-radius:10px; border:none; background:#16a34a; color:#fff; font-size:0.82rem; font-weight:700; cursor:pointer; font-family:'Share Tech Mono',monospace; letter-spacing:0.05em; }
+.bq-done-btn:hover { background:#15803d; }
+
+/* TEAM HUDDLE MODAL */
+#huddle-modal {
+  display:none; position:absolute; inset:0; z-index:500;
+  background:rgba(0,0,0,0.55); align-items:center; justify-content:center;
+  padding:1.5rem;
+}
+#huddle-modal.show { display:flex; }
+.huddle-card {
+  background:#1a1400; border:2px solid var(--warn);
+  border-radius:12px; padding:1.5rem; max-width:420px; width:100%;
+  box-shadow:0 0 40px rgba(255,214,10,0.2);
+}
+.huddle-label {
+  font-family:'Share Tech Mono', monospace; font-size:0.62rem;
+  letter-spacing:0.2em; color:var(--warn); margin-bottom:0.8rem;
+}
+.huddle-q {
+  font-size:0.92rem; color:#ffe066; font-weight:700;
+  line-height:1.5; margin-bottom:0.7rem;
+}
+.huddle-hint {
+  font-family:'Share Tech Mono', monospace; font-size:0.72rem;
+  color:rgba(255,220,80,0.92); line-height:1.6; margin-bottom:1.1rem;
+}
+.huddle-dismiss {
+  width:100%; padding:0.65rem; border:none; border-radius:8px;
+  background:var(--warn); color:#000; font-size:0.82rem;
+  font-weight:700; cursor:pointer; font-family:'Oxanium',sans-serif;
+  letter-spacing:0.05em;
+}
+.huddle-dismiss:hover { background:#ffe84d; }
+
+/* NOTEBOOK */
+.notebook { background:var(--panel2); border-left:1px solid var(--border); padding:1.4rem; overflow-y:auto; max-height:calc(100vh - 55px); }
+.nb-title { font-family:'Share Tech Mono', monospace; font-size:0.62rem; letter-spacing:0.25em; color:var(--text); border-bottom:1px solid var(--border); padding-bottom:0.8rem; margin-bottom:1.2rem; }
+.nb-entry { background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--border); padding:0.75rem; margin-bottom:0.75rem; opacity:0.4; transition:all 0.35s; }
+.nb-entry.found { border-left-color:var(--solved); opacity:1; }
+.nb-num { font-family:'Share Tech Mono', monospace; font-size:0.65rem; color:#7aa8cc; letter-spacing:0.08em; margin-bottom:0.3rem; }
+.nb-entry.found .nb-num { color:var(--solved); }
+.nb-head { font-size:0.88rem; font-weight:600; color:#ddeeff; margin-bottom:0.3rem; }
+.nb-body { font-size:0.78rem; color:#a8c8e0; line-height:1.6; }
+.nb-entry.found .nb-body { color:#ddeeff; }
+.nb-progress { margin-top:1.4rem; padding-top:1rem; border-top:1px solid var(--border); }
+.nb-prog-lbl { font-family:'Share Tech Mono', monospace; font-size:0.62rem; color:var(--text); letter-spacing:0.12em; margin-bottom:0.45rem; }
+.nb-prog-bar { height:5px; background:var(--border); border-radius:3px; overflow:hidden; }
+.nb-prog-fill { height:100%; background:var(--solved); transition:width 0.5s ease; width:0; box-shadow:0 0 8px var(--solved); }
+.nb-prog-txt { font-family:'Share Tech Mono', monospace; font-size:0.68rem; color:var(--text); text-align:right; margin-top:0.3rem; }
+.hint-panel { background:rgba(0,200,255,0.06); border:1px solid rgba(0,200,255,0.25); border-radius:4px; padding:0.75rem; margin-top:1rem; }
+.hint-lbl { font-family:'Share Tech Mono', monospace; font-size:0.62rem; letter-spacing:0.15em; color:var(--accent); margin-bottom:0.4rem; }
+.hint-txt { font-size:0.78rem; color:var(--text); line-height:1.6; }
+
+/* Return to home button — shown after each challenge is solved */
+.home-return-btn {
+  display:none; width:100%; margin-top:0.7rem;
+  padding:0.65rem; border:none; border-radius:8px;
+  background:#f0f4ff; color:#1877f2; font-size:0.8rem;
+  font-weight:700; cursor:pointer; font-family:inherit;
+  letter-spacing:0.02em; transition:background 0.15s;
+}
+.home-return-btn:hover { background:#dce8ff; }
+.home-return-btn.show { display:block; }
+
+/* CONCLUSIONS APP */
+.conc-q-card { background:#ede4d0; border:1px solid #b8a882; border-left:3px solid #8b7355; padding:0.85rem; transition:opacity 0.3s; font-family:'Share Tech Mono',monospace; }
+.conc-q-card.locked { opacity:0.3; pointer-events:none; }
+.conc-q-num { font-size:0.6rem; font-weight:700; letter-spacing:0.18em; color:#8b5e3c; margin-bottom:0.45rem; }
+.conc-q-text { font-size:0.82rem; font-weight:700; color:#2c1810; margin-bottom:0.7rem; line-height:1.5; font-family:-apple-system,'Helvetica Neue',sans-serif; }
+.conc-opts { display:flex; flex-direction:column; gap:0.4rem; }
+.conc-opt { border:1px solid #b8a882; padding:0.55rem 0.75rem; font-size:0.78rem; color:#2c1810; cursor:pointer; background:#f5efe0; text-align:left; font-family:-apple-system,'Helvetica Neue',sans-serif; line-height:1.4; transition:all 0.15s; border-radius:2px; }
+.conc-opt:hover { background:#e8ddc8; border-color:#8b7355; }
+.conc-opt.right { border-color:#1a5c1a; background:#e0f0e0; color:#1a5c1a; font-weight:700; pointer-events:none; }
+.conc-opt.wrong { border-color:#8b2000; background:#f5e8e0; color:#8b2000; pointer-events:none; }
+.conc-opt.disabled { pointer-events:none; opacity:0.45; }
+.conc-reveal { font-size:0.75rem; font-weight:600; color:#1a5c1a; background:#e0f0e0; border-left:3px solid #1a5c1a; padding:0.5rem 0.7rem; margin-top:0.5rem; line-height:1.5; display:none; font-family:-apple-system,'Helvetica Neue',sans-serif; }
+.conc-reveal.show { display:block; }
+.conc-reveal.wrong-reveal { color:#8b2000; background:#f5e8e0; border-left-color:#8b2000; }
+
+/* WIN */
+#win-overlay { position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.92); display:none; align-items:center; justify-content:center; overflow-y:auto; padding:2rem; }
+#win-overlay.show { display:flex; }
+.win-box { background:var(--panel); border:2px solid var(--solved); padding:2.5rem; max-width:500px; width:100%; text-align:center; box-shadow:0 0 80px rgba(0,255,136,0.25); }
+.win-title { font-family:'Orbitron', monospace; font-size:1.6rem; color:var(--solved); margin-bottom:1rem; }
+.win-body { font-family:'Share Tech Mono', monospace; font-size:0.8rem; color:var(--text); line-height:1.8; margin-bottom:1.4rem; }
+.win-findings { text-align:left; background:rgba(0,255,136,0.04); border:1px solid rgba(0,255,136,0.2); padding:1rem; margin-bottom:1.2rem; }
+.win-findings li { font-family:'Share Tech Mono', monospace; font-size:0.72rem; color:var(--text); padding:0.3rem 0 0.3rem 1.5rem; list-style:none; position:relative; border-bottom:1px solid rgba(0,255,136,0.08); }
+.win-findings li:last-child { border-bottom:none; }
+.win-findings li::before { content:'✓'; position:absolute; left:0; color:var(--solved); }
+.win-findings strong { color:var(--accent); }
+.win-discuss { text-align:left; background:rgba(255,214,10,0.06); border:1px solid rgba(255,214,10,0.3); padding:1rem; margin-bottom:1.4rem; }
+.win-discuss-title { font-family:'Share Tech Mono', monospace; font-size:0.62rem; letter-spacing:0.18em; color:var(--warn); margin-bottom:0.6rem; }
+.win-discuss li { font-family:'Share Tech Mono', monospace; font-size:0.7rem; color:#ffe066; padding:0.25rem 0 0.25rem 1.2rem; list-style:none; position:relative; line-height:1.5; }
+.win-discuss li::before { content:'▸'; position:absolute; left:0; color:var(--warn); }
+.win-replay { font-family:'Orbitron', monospace; font-size:0.8rem; font-weight:700; letter-spacing:0.15em; color:#000; background:var(--solved); border:none; padding:0.75rem 2.5rem; cursor:pointer; }
+.win-replay:hover { background:#fff; }
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="intro">
+  <div class="intro-eyebrow">🔒 CLASSIFIED — JUNIOR DETECTIVE BRIEFING</div>
+  <h1 class="intro-h1">CYBER<br><em>DETECTIVES</em></h1>
+  <div class="intro-case">// OPERATION: EMMA CHEN //</div>
+  <div class="briefing">
+    <div class="briefing-label">📁 CASE FILE #2024-EMM — ACTIVE</div>
+    <p>Your classmate <strong>Emma Chen</strong> just got hacked. Your team has <strong>forensic access to Emma's phone</strong> — work together to uncover every attack.</p>
+    <ul class="briefing-tasks">
+      <li>Crack how the hacker guessed Emma's FaceSpace password</li>
+      <li>Expose the scam that tricked her into handing over her login code</li>
+      <li>Find all red flags in the phishing email she received</li>
+      <li>Bust a sketchy app that tried to steal her personal information</li>
+    </ul>
+  </div>
+  <button class="start-btn" onclick="go()">▶ START INVESTIGATION</button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="det-badge">🔍 DETECTIVE MODE — ACTIVE</div>
+      <div class="case-lbl">Case #2024-EMM · Emma's Phone</div>
+    </div>
+    <div class="dots">
+      <div class="dot" id="d1"><div class="dot-label">SOCIAL</div></div>
+      <div class="dot" id="d2"><div class="dot-label">TEXTS</div></div>
+      <div class="dot" id="d3"><div class="dot-label">EMAIL</div></div>
+      <div class="dot" id="d4"><div class="dot-label">APP</div></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="sidebar">
+      <div class="sb-title">EMMA'S PHONE</div>
+      <div class="sbitem active" id="sb-home" onclick="nav('home')">
+        <div class="sbitem-icon">🏠</div>
+        <div><div class="sbitem-name">Home</div><div class="sbitem-sub">Start here</div></div>
+      </div>
+      <div class="sbitem" id="sb-social" onclick="nav('social')">
+        <div class="sbitem-icon">📘</div>
+        <div><div class="sbitem-name">FaceSpace</div><div class="sbitem-sub">Social media</div></div>
+        <div class="sb-check">✓</div>
+      </div>
+      <div class="sbitem" id="sb-msgs" onclick="nav('msgs')">
+        <div class="sbitem-icon">💬</div>
+        <div><div class="sbitem-name">Messages</div><div class="sbitem-sub">Text history</div></div>
+        <div class="sb-check">✓</div>
+      </div>
+      <div class="sbitem" id="sb-email" onclick="nav('email')">
+        <div class="sbitem-icon">📧</div>
+        <div><div class="sbitem-name">Gmail</div><div class="sbitem-sub">Email</div></div>
+        <div class="sb-check">✓</div>
+      </div>
+      <div class="sbitem" id="sb-df" onclick="nav('df')">
+        <div class="sbitem-icon">🎵</div>
+        <div><div class="sbitem-name">Quizzify</div><div class="sbitem-sub">Personality quiz app</div></div>
+        <div class="sb-check">✓</div>
+      </div>
+      <div class="sbitem" id="sb-conclusions" onclick="navConclusions()">
+        <div class="sbitem-icon" id="sb-conc-icon">🔒</div>
+        <div><div class="sbitem-name" id="sb-conc-name" style="color:var(--text-dim);">Case Report</div><div class="sbitem-sub" id="sb-conc-sub">Locked — solve all 4 first</div></div>
+        <div class="sb-check">✓</div>
+      </div>
+    </div>
+
+    <div class="phone-wrap" style="position:relative;">
+
+      <!-- TEAM HUDDLE MODAL -->
+      <div id="huddle-modal">
+        <div class="huddle-card">
+          <div class="huddle-label">👥 TEAM HUDDLE — PAUSE &amp; DISCUSS</div>
+          <div class="huddle-q" id="huddle-modal-q"></div>
+          <button class="huddle-dismiss" onclick="dismissHuddle()">Got it — continue the investigation ›</button>
+        </div>
+      </div>
+      <div class="phone">
+        <div class="phone-notch"><div class="phone-notch-pill"></div></div>
+        <div class="phone-status"><span>9:41</span><span>⚡ 87%</span></div>
+        <div class="phone-body">
+
+          <!-- HOME -->
+          <div class="scr on" id="scr-home">
+            <div class="home-bg">
+              <div><div class="home-time">9:41</div><div class="home-date">Thursday, October 17</div></div>
+              <div class="lock-notif" onclick="subNav('msgs','scam')">
+                <div style="font-size:1.3rem;">💬</div>
+                <div><div class="lock-notif-app">Messages</div><div class="lock-notif-text">FaceSpace Support: "Your account is at risk. Please verify your password NOW or your account will be..."</div></div>
+              </div>
+              <div class="lock-notif" onclick="nav('email')">
+                <div style="font-size:1.3rem;">📧</div>
+                <div><div class="lock-notif-app">Gmail</div><div class="lock-notif-text">Riverdale Middle IT: "URGENT — Student portal access suspended. Verify within 24 hours."</div></div>
+              </div>
+              <div class="apps-divider">— APPS —</div>
+              <div class="app-grid">
+                <div class="appico" onclick="nav('social')"><div class="appico-face" style="background:#1877f2;">📘</div><div class="appico-lbl">FaceSpace</div></div>
+                <div class="appico" onclick="nav('msgs')"><div class="appico-face" style="background:#34C759; position:relative;">💬<div class="badge-num">3</div></div><div class="appico-lbl">Messages</div></div>
+                <div class="appico" onclick="nav('email')"><div class="appico-face" style="background:#EA4335; position:relative;">📧<div class="badge-num">1</div></div><div class="appico-lbl">Gmail</div></div>
+                <div class="appico" onclick="nav('df')"><div class="appico-face" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">🎵</div><div class="appico-lbl">Quizzify</div></div>
+                <div class="appico" onclick="navConclusions()"><div class="appico-face" id="conc-icon-face" style="background:#636366;">🔒</div><div class="appico-lbl" id="conc-icon-lbl" style="opacity:0.5;">Case Report</div></div>
+                <div class="appico"><div class="appico-face" style="background:#FF9500;">📷</div><div class="appico-lbl">Camera</div></div>
+                <div class="appico"><div class="appico-face" style="background:#FFD60A;">📝</div><div class="appico-lbl">Notes</div></div>
+                <div class="appico"><div class="appico-face" style="background:#34C759;">🗺️</div><div class="appico-lbl">Maps</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SOCIAL -->
+          <div class="scr" id="scr-social">
+            <div class="social-scr">
+              <div class="fb-bar">f FaceSpace</div>
+              <div class="profile-banner"></div>
+              <div class="prof-section">
+                <div class="prof-av">👧</div>
+                <div class="prof-name">Emma Chen ✨</div>
+                <div class="prof-bio">
+                  14 y/o guitarist 🎸 | animal lover 🐾<br>
+                  besties with my golden <span class="hl" data-clue="1" onclick="spuzHint(1)">Biscuit</span> since forever 🐕<br>
+                  born: <span class="hl" data-clue="2" onclick="spuzHint(2)">March 2010</span> · <span class="hl" data-clue="3" onclick="spuzHint(3)">Springfield</span> 🏡<br>
+                  go <span class="hl" data-clue="4" onclick="spuzHint(4)">Riverdale Wolves</span>!! 🐺 #<span class="hl" data-clue="5" onclick="spuzHint(5)">13</span> forever
+                </div>
+                <div class="prof-stats">
+                  <div><div class="pstat-n">312</div><div class="pstat-l">posts</div></div>
+                  <div><div class="pstat-n">1.4k</div><div class="pstat-l">friends</div></div>
+                  <div><div class="pstat-n" style="color:#ea4335;">🌐 Public</div><div class="pstat-l">profile</div></div>
+                </div>
+              </div>
+              <div class="post">
+                <div class="post-hd"><div class="post-av">👧</div><div class="post-who">Emma Chen</div><div class="post-when">2 days ago</div></div>
+                <div class="post-body">Happy 14th birthday to my absolute favorite goofball <span class="hl" data-clue="1" onclick="spuzHint(1)">Biscuit</span>!! 🎂🐕 My password for everything is basically just you lmao. I would never forget it as long as you exist! #BestDog #<span class="hl" data-clue="1" onclick="spuzHint(1)">Biscuit</span>Forever</div>
+                <div class="post-acts"><span>👍 241</span><span>💬 33</span><span>🔗 Share</span></div>
+              </div>
+              <div class="post">
+                <div class="post-hd"><div class="post-av">👧</div><div class="post-who">Emma Chen</div><div class="post-when">3 weeks ago</div></div>
+                <div class="post-body">Jersey number <span class="hl" data-clue="5" onclick="spuzHint(5)">13</span> runs in the family — my dad wore it too! Lucky <span class="hl" data-clue="5" onclick="spuzHint(5)">13</span> is honestly the key to everything for me 😂🐺</div>
+                <div class="post-acts"><span>👍 88</span><span>💬 12</span><span>🔗 Share</span></div>
+              </div>
+              <div class="social-puzzle">
+                <div class="spuz-title">🔍 Challenge #1 — Password Cracker</div>
+                <div class="spuz-q">The hacker used Emma's <em>public</em> profile to guess her password. <strong>Tap the underlined words</strong> in her bio and posts — the clues will fill in automatically below.</div>
+                <div class="crack-steps">
+                  <div class="crack-step" id="cstep-1">
+                    <label>CLUE A — Her pet's name (check her bio &amp; posts)</label>
+                    <input type="text" class="crack-inp" id="ci-1" placeholder="Dog's name..." />
+                    <button class="crack-btn" onclick="checkCrack(1)">Check →</button>
+                    <div class="crack-result" id="cr-1"></div>
+                  </div>
+                  <div class="crack-step locked" id="cstep-2">
+                    <label>CLUE B — Her lucky number (check her posts)</label>
+                    <input type="text" class="crack-inp" id="ci-2" placeholder="Jersey / lucky number..." />
+                    <button class="crack-btn" onclick="checkCrack(2)">Check →</button>
+                    <div class="crack-result" id="cr-2"></div>
+                  </div>
+                  <div class="crack-step locked" id="cstep-3">
+                    <label>CLUE C — Full password: name + number + "!" (very common pattern)</label>
+                    <input type="text" class="crack-inp" id="ci-3" placeholder="Assemble the full password..." />
+                    <button class="crack-btn" onclick="checkCrack(3)">🔓 Try to unlock</button>
+                    <div class="crack-result" id="cr-3"></div>
+                    <button class="home-return-btn" id="home-btn-social" onclick="nav('home')">🏠 Back to Emma's phone</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MESSAGES LIST -->
+          <div class="scr" id="scr-msgs">
+            <div class="msg-scr">
+              <div class="msg-bar"><span>💬</span><h2>Messages</h2></div>
+              <div class="conv-item" onclick="subNav('msgs','alex')">
+                <div class="conv-av" style="background:#ff6b9d;">👩</div>
+                <div><div class="conv-name">Alex 💕</div><div class="conv-prev">omg you HAVE to do this quiz it told me I'm a "chaotic creative" lmaoo</div></div>
+                <div class="conv-t">2 days ago</div>
+              </div>
+              <div class="conv-item" onclick="subNav('msgs','2fa')">
+                <div class="conv-av" style="background:#636366; font-size:0.75rem; font-weight:700; color:#fff;">FS</div>
+                <div><div class="conv-name" style="font-family:'Share Tech Mono',monospace; font-size:0.82rem;">74776</div><div class="conv-prev">Your FaceSpace verification code is 748 291. Never share this code with anyone.</div></div>
+                <div class="conv-t">Yesterday</div>
+              </div>
+              <div class="conv-item" onclick="subNav('msgs','scam')">
+                <div class="conv-av" style="background:#FF9500;">🔧</div>
+                <div><div class="conv-name">FaceSpace Support ⚠️</div><div class="conv-prev">We detected a login to your account. Reply with your 6-digit verification code to confirm it's you...</div></div>
+                <div class="conv-t">Yesterday</div>
+              </div>
+              <div class="conv-item" onclick="subNav('msgs','mom')">
+                <div class="conv-av" style="background:#AF52DE;">👩‍👧</div>
+                <div><div class="conv-name">Mom 💜</div><div class="conv-prev">Please stop using Biscuit as your password for everything...</div></div>
+                <div class="conv-t">3 days ago</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REAL 2FA TEXT -->
+          <div class="scr" id="scr-msgs-2fa">
+            <div class="chat">
+              <div class="chat-hd">
+                <div class="back" onclick="nav('msgs')">‹</div>
+                <div>
+                  <div class="chat-name" style="font-family:'Share Tech Mono',monospace;">74776</div>
+                  <div class="chat-status">Automated message · FaceSpace</div>
+                </div>
+              </div>
+              <div class="chat-msgs">
+                <div style="text-align:center; font-size:0.65rem; color:#aaa; padding:0.5rem 0;">Yesterday 11:41 AM</div>
+                <div class="bubble in">Your <strong>FaceSpace</strong> verification code is:<br><br><span style="font-family:'Share Tech Mono',monospace; font-size:1.4rem; font-weight:700; letter-spacing:0.2em; color:#007AFF;">748 291</span><br><br>This code expires in 10 minutes. <strong>Never share this code with anyone.</strong> FaceSpace will never ask for it.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SCAM CONVO -->
+          <div class="scr" id="scr-msgs-scam">
+            <div class="chat">
+              <div class="chat-hd">
+                <div class="back" onclick="nav('msgs')">‹</div>
+                <div><div class="chat-name">FaceSpace Support</div><div class="chat-status" style="color:#ea4335;">⚠️ Unverified sender</div></div>
+              </div>
+              <div class="chat-msgs">
+                <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:0.6rem 0.8rem; font-size:0.72rem; color:#856404; margin-bottom:0.4rem; text-align:center;">
+                  🔐 <strong>What is 2FA?</strong> After the hacker used the guessed password to try to log in, FaceSpace sent Emma a one-time 6-digit code to her phone — a second check to prove it's really her. The hacker needs that code too.
+                </div>
+                <div class="bubble in flagged"><div class="flag-tag">⚠️ RED FLAG?</div>Hi Emma! We detected a new login to your FaceSpace from an unrecognized device. We just sent a 6-digit verification code to your phone. Please reply with that code right away so we can confirm it's you. 🔒</div>
+                <div class="bubble out">Oh ok, I just got a text with a code<div class="btime">11:41 AM</div></div>
+                <div class="bubble in flagged"><div class="flag-tag">⚠️ RED FLAG?</div>Yes that's the one! Please send it here quickly — you have <strong>5 MINUTES</strong> before the login window expires and your account gets locked. 🚨</div>
+                <div class="bubble out">Ok it's 748 291<div class="btime">11:42 AM</div></div>
+                <div class="bubble in flagged"><div class="flag-tag">⚠️ RED FLAG?</div>Perfect, thank you Emma! Your account is now "secured." 😈</div>
+                <div class="bubble out">Wait — why would FaceSpace need me to send the code BACK to them? They sent it to me...<div class="btime">11:48 AM</div></div>
+                <div class="bubble in">No need to worry! Have a great day! 😊</div>
+                <div style="background:#fce8e6; border:1px solid #ea4335; border-radius:6px; padding:0.6rem 0.8rem; font-size:0.72rem; color:#c62828; margin-top:0.4rem;">
+                  🚨 <strong>What just happened:</strong> The hacker used Emma's guessed password to log in on their computer. FaceSpace sent the code to Emma — but the hacker tricked her into texting it to them. Now they're inside.
+                </div>
+              </div>
+              <div class="msg-puzzle">
+                <div class="msg-puz-title">🔍 Challenge #2 — Spot the Red Flags</div>
+                <div style="font-size:0.78rem; color:#555; margin-bottom:0.7rem;">This conversation has <strong>3 big problems</strong>. Work as a team to answer all questions correctly.</div>
+                <div class="multi-q">
+                  <div class="mq-item">
+                    <label>RED FLAG #1 — Why should Emma NEVER text someone a 2FA code?</label>
+                    <div class="mq-opts" id="mq1">
+                      <div class="mq-opt" onclick="pickMQ(1,this,'wrong')">The code might be too short</div>
+                      <div class="mq-opt" onclick="pickMQ(1,this,'correct')">The code is the only thing stopping someone who already has your password from getting in</div>
+                      <div class="mq-opt" onclick="pickMQ(1,this,'wrong')">Text messages cost money</div>
+                      <div class="mq-opt" onclick="pickMQ(1,this,'wrong')">It wastes time</div>
+                    </div>
+                  </div>
+                  <div class="mq-item">
+                    <label>RED FLAG #2 — The "5-minute countdown" is designed to do what?</label>
+                    <div class="mq-opts" id="mq2">
+                      <div class="mq-opt" onclick="pickMQ(2,this,'wrong')">Warn you about real danger</div>
+                      <div class="mq-opt" onclick="pickMQ(2,this,'correct')">Make you panic so you act without thinking</div>
+                      <div class="mq-opt" onclick="pickMQ(2,this,'wrong')">Give you extra time to prepare</div>
+                      <div class="mq-opt" onclick="pickMQ(2,this,'wrong')">Speed up the security process</div>
+                    </div>
+                  </div>
+                  <div class="mq-item">
+                    <label>RED FLAG #3 — The real FaceSpace sent Emma the code. Why would they need her to send it back?</label>
+                    <div class="mq-opts" id="mq3">
+                      <div class="mq-opt" onclick="pickMQ(3,this,'wrong')">To double-check it arrived correctly</div>
+                      <div class="mq-opt" onclick="pickMQ(3,this,'wrong')">It's a standard security step</div>
+                      <div class="mq-opt" onclick="pickMQ(3,this,'correct')">They wouldn't — this is the scammer, not FaceSpace. FaceSpace already knows the code they sent.</div>
+                      <div class="mq-opt" onclick="pickMQ(3,this,'wrong')">In case Emma's phone has a virus</div>
+                    </div>
+                  </div>
+                </div>
+                <button class="mq-submit" id="mq-submit" onclick="submitMQ()" disabled>✓ Submit Answers</button>
+                <div class="mq-result" id="mq-result"></div>
+                <button class="home-return-btn" id="home-btn-msgs" onclick="nav('home')">🏠 Back to Emma's phone</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ALEX CONVO -->
+          <div class="scr" id="scr-msgs-alex">
+            <div class="chat">
+              <div class="chat-hd"><div class="back" onclick="nav('msgs')">‹</div><div><div class="chat-name">Alex 💕</div><div class="chat-status">Active now</div></div></div>
+              <div class="chat-msgs">
+                <div class="bubble in">omg emma you HAVE to do this quiz 😭 it said i'm a "chaotic creative" which is literally so me<div class="btime">2 days ago</div></div>
+                <div class="bubble in" style="font-size:0.75rem; background:#e8e8ea;">🔗 quizzify-app.co/personality-quiz</div>
+                <div class="bubble out">lol sending now<div class="btime">2 days ago</div></div>
+                <div class="bubble in">wait did it ask you for like a lot of info?? it asked me my birthday and i just put it in without thinking 😬<div class="btime">2 days ago</div></div>
+                <div class="bubble out">WHAT yes it asked for my address too and i gave it 😭😭<div class="btime">2 days ago</div></div>
+                <div class="bubble in">ok that is NOT normal for a quiz app. my sister said that's how those scam things work, they look fun and then steal your info<div class="btime">2 days ago</div></div>
+                <div class="bubble out">i'm literally so stupid<div class="btime">2 days ago</div></div>
+                <div class="bubble in">no!! you didn't know. but we should probably tell someone. also i'm deleting the app rn</div>
+              </div>
+              <div style="padding:0.8rem; background:#f0f0f5; font-size:0.75rem; color:#666; text-align:center; border-top:1px solid #e0e0e0;">💡 This is how Quizzify spread — a trusted friend shared it. Open the <strong>Quizzify</strong> app to investigate.</div>
+            </div>
+          </div>
+
+          <!-- MOM CONVO -->
+          <div class="scr" id="scr-msgs-mom">
+            <div class="chat">
+              <div class="chat-hd"><div class="back" onclick="nav('msgs')">‹</div><div><div class="chat-name">Mom 💜</div><div class="chat-status">Active 2h ago</div></div></div>
+              <div class="chat-msgs">
+                <div class="bubble in">Emma I keep telling you — PLEASE don't use Biscuit as your password for everything. You post about that dog constantly. Anyone following you could guess it in seconds.</div>
+                <div class="bubble out">Mom!! I know I know 🙄</div>
+                <div class="bubble in">Seriously. And don't use your jersey number either — that's public too! A good password looks like: G$7k!mPx2 — random, long, no real words.</div>
+                <div class="bubble out">UGHHH fine</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- EMAIL LIST -->
+          <div class="scr" id="scr-email">
+            <div class="email-scr">
+              <div class="email-bar">✉️ Gmail — emma.chen@riverdale.edu</div>
+              <div id="email-list-view">
+                <div class="eitem phish" onclick="showEmail('phish')">
+                  <div class="esender">⚠️ IT Support — Riverdale Middle</div>
+                  <div class="esubj">🔴 URGENT: Student Portal — Account Access Suspended</div>
+                  <div class="eprev">Your account has been flagged. Verify within 24 hours or access will be...</div>
+                </div>
+                <div class="eitem unread" onclick="showEmail('teacher')">
+                  <div class="esender">Ms. Rodriguez (English Dept)</div>
+                  <div class="esubj">Re: Your short story — really impressive work, Emma! ⭐</div>
+                  <div class="eprev">Hi Emma, I just finished reading "The Glass Key" and I have to say...</div>
+                </div>
+                <div class="eitem" onclick="showEmail('library')">
+                  <div class="esender">Riverdale Public Library</div>
+                  <div class="esubj">Your hold is ready — "Digital Fortress" available for pickup</div>
+                  <div class="eprev">The book you requested is now available at the front desk...</div>
+                </div>
+              </div>
+              <div class="eview" id="ev-phish">
+                <div style="font-size:0.72rem; color:#1a73e8; cursor:pointer; margin-bottom:0.7rem;" onclick="showEmail(null)">‹ Back to inbox</div>
+
+                <!-- Instruction strip -->
+                <div style="background:#fff3cd; border:1px solid #ffc107; border-radius:6px; padding:0.5rem 0.75rem; margin-bottom:0.8rem; font-size:0.75rem; color:#856404; font-weight:600;">
+                  🔍 Something's off about this email. Tap anything that looks suspicious to investigate it.
+                </div>
+
+                <div class="ev-subj">🔴 URGENT: Student Portal — Account Access Suspended</div>
+
+                <div class="ev-meta">
+                  <strong>From:</strong>
+                  <span class="phish-tap" id="ptap-sender" onclick="tapPhish('sender')">it-helpdesk@riverdale-middle-school.support-portal.net</span><br>
+                  <div class="phish-callout" id="pcall-sender">🚩 Red flag! Real school emails come from @riverdale.edu — this domain is completely made up. Anyone can create a fake domain like this.</div>
+                  <strong>To:</strong> emma.chen@riverdale.edu<br>
+                  <strong>Date:</strong> Thursday, Oct 17 · 9:31 AM
+                </div>
+
+                <div class="ev-body">
+                  <p>Dear Student,</p><br>
+                  <p>Our automated security system has flagged your account for unauthorized access attempts. To prevent permanent suspension of your Riverdale Middle School Student Portal, you must verify your identity immediately.</p><br>
+                  <p><span class="phish-tap" id="ptap-urgency" onclick="tapPhish('urgency')">⚠️ WARNING: You have 24 hours before your account and ALL saved work is permanently deleted.</span></p>
+                  <div class="phish-callout" id="pcall-urgency">🚩 Red flag! Scammers use scary countdowns to make you panic and act without thinking. A real school would never threaten to delete your work over email.</div>
+                  <br>
+                  <p>Click below to verify your account and enter your school login:</p><br>
+                  <p><span class="phish-tap" id="ptap-link" onclick="tapPhish('link')">🔗 http://stu-portal-riverdale.secure-verify-login.com/auth?token=9aX7k</span></p>
+                  <div class="phish-callout" id="pcall-link">🚩 Red flag! This link has nothing to do with school. The real portal would be portal.riverdale.edu. If Emma clicked this and typed her login, the hacker would get it instantly.</div>
+                  <br>
+                  <p>Regards,<br>IT Help Desk<br><em style="font-size:0.75rem; color:#888;">Riverdale Middle School · Student Services</em></p>
+                </div>
+
+                <div class="phish-progress" id="phish-progress">Find the red flags — tap anything suspicious ↑</div>
+
+                <!-- Final question — unlocks after all 3 tapped -->
+                <div class="email-final-q" id="email-final-q">
+                  <div class="email-final-title">🔍 Challenge #3 — What should Emma do?</div>
+                  <div class="email-final-text">You've spotted all three red flags. Now — what's the right move for Emma?</div>
+                  <div class="email-q-opts">
+                    <button class="email-q-opt" onclick="answerEmailQ(this,false)">Click the link to check if it's real</button>
+                    <button class="email-q-opt" onclick="answerEmailQ(this,false)">Reply to ask if the email is genuine</button>
+                    <button class="email-q-opt" onclick="answerEmailQ(this,true)">Delete it and go to the school portal directly by typing the address herself</button>
+                    <button class="email-q-opt" onclick="answerEmailQ(this,false)">Forward it to a friend to see what they think</button>
+                  </div>
+                  <div class="email-q-result" id="email-q-result"></div>
+                  <button class="home-return-btn" id="home-btn-email" onclick="nav('home')">🏠 Back to Emma's phone</button>
+                </div>
+              </div>
+              <div class="eview" id="ev-teacher">
+                <div style="font-size:0.72rem; color:#1a73e8; cursor:pointer; margin-bottom:0.7rem;" onclick="showEmail(null)">‹ Back to inbox</div>
+                <div class="ev-subj">Re: Your short story — really impressive work! ⭐</div>
+                <div class="ev-meta"><strong>From:</strong> m.rodriguez@riverdale.edu<br><strong>To:</strong> emma.chen@riverdale.edu</div>
+                <div class="ev-body"><p>Hi Emma,</p><br><p>I just finished reading "The Glass Key" and your use of foreshadowing in the third act was genuinely sophisticated for a 14-year-old. I'd love to nominate it for the district literary journal. Would you be okay with that?</p><br><p>— Ms. Rodriguez</p></div>
+              </div>
+              <div class="eview" id="ev-library">
+                <div style="font-size:0.72rem; color:#1a73e8; cursor:pointer; margin-bottom:0.7rem;" onclick="showEmail(null)">‹ Back to inbox</div>
+                <div class="ev-subj">Your hold is ready — "Digital Fortress"</div>
+                <div class="ev-meta"><strong>From:</strong> notifications@riverdale-library.org</div>
+                <div class="ev-body"><p>Hi Emma,</p><br><p>Your held book "Digital Fortress" by Dan Brown is available at the front desk. You have 7 days to pick it up.</p></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BOPQUIZ APP -->
+          <div class="scr" id="scr-df">
+            <div class="bq-scr">
+              <!-- App header -->
+              <div class="bq-header">
+                <div class="bq-logo">🎵</div>
+                <div class="bq-app-name">Quizzify</div>
+                <div class="bq-app-sub">The personality quiz everyone's talking about!</div>
+              </div>
+
+              <!-- Stage 1: The fun quiz (3 questions) -->
+              <div class="bq-quiz" id="bq-quiz-stage">
+                <div style="font-size:0.78rem; color:#555; margin-bottom:0.8rem; text-align:center;">Answer 3 questions to unlock your personality score! ✨</div>
+                <div class="bq-progress">
+                  <div class="bq-prog-dot" id="bqdot-1"></div>
+                  <div class="bq-prog-dot" id="bqdot-2"></div>
+                  <div class="bq-prog-dot" id="bqdot-3"></div>
+                </div>
+
+                <!-- Q1 -->
+                <div class="bq-q-card" id="bqq-1">
+                  <div class="bq-q-num">QUESTION 1 OF 3</div>
+                  <div class="bq-q-text">Your squad is deciding what to do on Saturday. You...</div>
+                  <div class="bq-options">
+                    <button class="bq-opt" onclick="answerBQ(1,this)">Have a whole plan ready before anyone asks 📋</button>
+                    <button class="bq-opt" onclick="answerBQ(1,this)">Go with whatever, you're just happy to hang 😎</button>
+                    <button class="bq-opt" onclick="answerBQ(1,this)">Suggest something chaotic and hope for the best 🎲</button>
+                  </div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="bq-q-card" id="bqq-2" style="display:none;">
+                  <div class="bq-q-num">QUESTION 2 OF 3</div>
+                  <div class="bq-q-text">Pick your ideal weekend 👇</div>
+                  <div class="bq-options">
+                    <button class="bq-opt" onclick="answerBQ(2,this)">Gaming marathon with snacks 🎮🍕</button>
+                    <button class="bq-opt" onclick="answerBQ(2,this)">Out somewhere with friends all day 🛍️</button>
+                    <button class="bq-opt" onclick="answerBQ(2,this)">Cosy day in with a book or show 📺</button>
+                  </div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="bq-q-card" id="bqq-3" style="display:none;">
+                  <div class="bq-q-num">QUESTION 3 OF 3</div>
+                  <div class="bq-q-text">Someone you don't know very well starts sitting with your friend group at lunch. You...</div>
+                  <div class="bq-options">
+                    <button class="bq-opt" onclick="answerBQ(3,this)">Immediately make them feel welcome 👋</button>
+                    <button class="bq-opt" onclick="answerBQ(3,this)">Wait and see what they're like first 👀</button>
+                    <button class="bq-opt" onclick="answerBQ(3,this)">Quietly hope your friend introduces you 😬</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stage 2: Evidence review — what Emma gave away -->
+              <div class="bq-wall" id="bq-wall-stage">
+                <div class="bq-results-teaser">
+                  <div class="bq-score-blur">87%</div>
+                  <div class="bq-score-label">Your personality score is ready!</div>
+                  <div class="bq-lock-icon">🔒</div>
+                  <div class="bq-wall-title">One quick step to unlock your results</div>
+                  <div class="bq-wall-sub">Quizzify needs a few details to show your results</div>
+                </div>
+                <div class="bq-evidence-hdr">
+                  <div class="bq-evidence-hdr-icon">🔍</div>
+                  <div class="bq-evidence-hdr-text">Emma filled in this form. For each piece of info she gave away, rate how risky it was.</div>
+                </div>
+                <div class="bq-requests" id="bq-requests"></div>
+                <button class="bq-done-btn" id="bq-done-btn" style="display:none;" onclick="solveDF()">✅ APP BUSTED — CLOSE THE CASE</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CONCLUSIONS APP -->
+          <div class="scr" id="scr-conclusions">
+            <div style="background:#e8e0d0; font-family:'Share Tech Mono',monospace; min-height:660px;">
+
+              <!-- File header -->
+              <div style="background:#2c1810; padding:0.6rem 1rem; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.65rem; color:#c8a882; letter-spacing:0.15em;">CYBER CRIMES UNIT</span>
+                <span style="font-size:0.65rem; color:#c8a882; letter-spacing:0.1em;">CLASSIFIED</span>
+              </div>
+
+              <!-- Case file cover -->
+              <div style="background:#d4c9b0; border-bottom:3px solid #8b7355; padding:1rem; position:relative; overflow:hidden;">
+                <!-- Diagonal lines texture -->
+                <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(0,0,0,0.03) 8px,rgba(0,0,0,0.03) 9px);pointer-events:none;"></div>
+                <div style="font-size:0.6rem; color:#6b5a3e; letter-spacing:0.2em; margin-bottom:0.4rem;">CASE FILE #2024-EMM</div>
+                <div style="font-size:1.1rem; font-weight:900; color:#2c1810; letter-spacing:0.05em; margin-bottom:0.1rem;">OPERATION: EMMA CHEN</div>
+                <div style="font-size:0.65rem; color:#6b5a3e; margin-bottom:0.8rem; letter-spacing:0.08em;">SUBJECT: MULTIPLE CYBER ATTACKS — JUVENILE VICTIM</div>
+                <div style="display:flex; gap:1rem;">
+                  <div style="font-size:0.6rem; color:#6b5a3e;">DATE: 17 OCT 2024</div>
+                  <div style="font-size:0.6rem; color:#6b5a3e;">STATUS: UNDER REVIEW</div>
+                </div>
+                <!-- Red CONFIDENTIAL stamp -->
+                <div style="position:absolute; top:0.7rem; right:0.8rem; border:2px solid #cc2200; border-radius:4px; padding:0.2rem 0.5rem; transform:rotate(-8deg); opacity:0.75;">
+                  <div style="font-size:0.6rem; color:#cc2200; font-weight:700; letter-spacing:0.15em;">CONFIDENTIAL</div>
+                </div>
+              </div>
+
+              <!-- Instruction strip -->
+              <div style="background:#c8bb9a; border-bottom:1px solid #a09070; padding:0.5rem 1rem; font-size:0.65rem; color:#4a3820; letter-spacing:0.05em;">
+                ▸ DEBRIEF QUESTIONS — Complete each section to finalise the case file
+              </div>
+
+              <div style="padding:0.8rem; display:flex; flex-direction:column; gap:0.7rem;" id="conc-questions">
+
+                <!-- Q1 -->
+                <div class="conc-q-card" id="concq-1">
+                  <div class="conc-q-num">SECTION 1 — PASSWORD BREACH</div>
+                  <div class="conc-q-text">Emma's password was "Biscuit13!". How did the attacker figure it out without ever speaking to her?</div>
+                  <div class="conc-opts">
+                    <button class="conc-opt" onclick="answerConc(1,this,false)">They guessed randomly until it worked</button>
+                    <button class="conc-opt" onclick="answerConc(1,this,true)">Her public FaceSpace profile named her dog and her jersey number</button>
+                    <button class="conc-opt" onclick="answerConc(1,this,false)">They hacked into FaceSpace's servers</button>
+                  </div>
+                  <div class="conc-reveal" id="concrev-1"></div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="conc-q-card locked" id="concq-2">
+                  <div class="conc-q-num">SECTION 2 — 2FA BYPASS</div>
+                  <div class="conc-q-text">Emma received a real 2FA code from FaceSpace. Why did texting it to the "support" number hand the attacker full access?</div>
+                  <div class="conc-opts">
+                    <button class="conc-opt" onclick="answerConc(2,this,false)">Because the code was too short to be secure</button>
+                    <button class="conc-opt" onclick="answerConc(2,this,false)">Because she replied too slowly</button>
+                    <button class="conc-opt" onclick="answerConc(2,this,true)">The attacker already had her password — the code was the only thing left blocking them</button>
+                  </div>
+                  <div class="conc-reveal" id="concrev-2"></div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="conc-q-card locked" id="concq-3">
+                  <div class="conc-q-num">SECTION 3 — PHISHING EMAIL</div>
+                  <div class="conc-q-text">The email came from "riverdale-middle-school.support-portal.net". What's the fastest way to spot it was fake?</div>
+                  <div class="conc-opts">
+                    <button class="conc-opt" onclick="answerConc(3,this,false)">The email had spelling mistakes</button>
+                    <button class="conc-opt" onclick="answerConc(3,this,true)">The domain isn't @riverdale.edu — real school emails always come from the school's own domain</button>
+                    <button class="conc-opt" onclick="answerConc(3,this,false)">The subject line was in capitals</button>
+                  </div>
+                  <div class="conc-reveal" id="concrev-3"></div>
+                </div>
+
+                <!-- Q4 -->
+                <div class="conc-q-card locked" id="concq-4">
+                  <div class="conc-q-num">SECTION 4 — INVESTIGATOR'S VERDICT</div>
+                  <div class="conc-q-text">If you could give Emma one rule that would have prevented most of what happened — what is it?</div>
+                  <div class="conc-opts">
+                    <button class="conc-opt" onclick="answerConc(4,this,false)">Never use social media</button>
+                    <button class="conc-opt" onclick="answerConc(4,this,false)">Change your password every day</button>
+                    <button class="conc-opt" onclick="answerConc(4,this,true)">Think before you share — ask "who could see this, and could it be used against me?"</button>
+                  </div>
+                  <div class="conc-reveal" id="concrev-4"></div>
+                </div>
+              </div>
+
+              <!-- Final — case closed stamp -->
+              <div id="conc-final" style="display:none; padding:0.8rem; padding-top:0;">
+                <div style="background:#d4c9b0; border:2px solid #8b7355; border-radius:4px; padding:1rem; position:relative; overflow:hidden;">
+                  <div style="position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 8px,rgba(0,0,0,0.03) 8px,rgba(0,0,0,0.03) 9px);pointer-events:none;"></div>
+                  <div style="font-size:0.6rem; color:#6b5a3e; letter-spacing:0.15em; margin-bottom:0.5rem;">INVESTIGATOR'S SUMMARY</div>
+                  <div style="font-size:0.77rem; color:#2c1810; line-height:1.7; margin-bottom:0.9rem;">Emma made four mistakes that connected into one attack: oversharing publicly, using personal info as a password, handing over her 2FA code under fake urgency, and trusting a scam app. Each felt small in the moment — together they gave the attacker everything.</div>
+                  <!-- Stamp effect -->
+                  <div style="text-align:center; margin-bottom:0.9rem;">
+                    <div style="display:inline-block; border:3px solid #1a5c1a; border-radius:6px; padding:0.35rem 1rem; transform:rotate(-3deg);">
+                      <div style="font-size:0.65rem; color:#1a5c1a; font-weight:700; letter-spacing:0.2em;">✓ INVESTIGATION COMPLETE</div>
+                    </div>
+                  </div>
+                  <button style="width:100%; padding:0.7rem; border-radius:4px; border:2px solid #2c1810; background:#2c1810; color:#c8a882; font-size:0.78rem; font-weight:700; cursor:pointer; font-family:'Share Tech Mono',monospace; letter-spacing:0.12em;" onclick="showWin()">⬛ CLOSE THE CASE FILE</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div><!-- phone-body -->
+      </div><!-- phone -->
+    </div><!-- phone-wrap -->
+
+    <!-- NOTEBOOK -->
+    <div class="notebook">
+      <div class="nb-title">📓 DETECTIVE NOTEBOOK</div>
+
+      <div class="nb-entry" id="nb1">
+        <div class="nb-num">CLUE #1 — SOCIAL MEDIA</div>
+        <div class="nb-head">Password in Plain Sight</div>
+        <div class="nb-body" id="nb1-body">Go to FaceSpace. Click the underlined clues in her bio and posts, then complete the 3-step cracker.</div>
+      </div>
+
+
+      <div class="nb-entry" id="nb2">
+        <div class="nb-num">CLUE #2 — TEXT MESSAGES</div>
+        <div class="nb-head">Social Engineering Attack</div>
+        <div class="nb-body" id="nb2-body">Open the "FaceSpace Support" thread. Answer all 3 questions correctly.</div>
+      </div>
+
+
+      <div class="nb-entry" id="nb3">
+        <div class="nb-num">CLUE #3 — EMAIL</div>
+        <div class="nb-head">Phishing Hook</div>
+        <div class="nb-body" id="nb3-body">Open the suspicious school email. Collect all 4 pieces of evidence.</div>
+      </div>
+
+
+      <div class="nb-entry" id="nb4">
+        <div class="nb-num">CLUE #4 — SUSPICIOUS APP</div>
+        <div class="nb-head">Quizzify Data Grab</div>
+        <div class="nb-body" id="nb4-body">Open the Quizzify app. Play the quiz, then help Emma decide what to share when the app starts asking for personal information.</div>
+      </div>
+
+
+      <div class="nb-progress">
+        <div class="nb-prog-lbl">CASE PROGRESS</div>
+        <div class="nb-prog-bar"><div class="nb-prog-fill" id="progbar"></div></div>
+        <div class="nb-prog-txt" id="progtxt">0 / 4 solved</div>
+      </div>
+      <div class="hint-panel">
+        <div class="hint-lbl">💡 NEXT STEP</div>
+        <div class="hint-txt" id="hinttxt">Start on FaceSpace. Emma's password is hidden in her public profile — click the underlined words to collect clues.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WIN SCREEN -->
+<div id="win-overlay">
+  <div class="win-box">
+    <div class="win-title">🏆 CASE SOLVED</div>
+    <div class="win-body">Outstanding detective work. Your team exposed every vulnerability in Emma's case.</div>
+    <ul class="win-findings">
+      <li><strong>Password guessing:</strong> "Biscuit13!" was built entirely from Emma's public bio. Personal info = guessable passwords.</li>
+      <li><strong>Social engineering:</strong> Fake urgency + impersonation made Emma hand over her password in under 60 seconds.</li>
+      <li><strong>Phishing email:</strong> Spoofed domain, fake link, and a 24-hour panic deadline — all classic phishing tactics.</li>
+      <li><strong>Scam app:</strong> Quizzify looked fun and free but asked for birthday and home address to "unlock" results. Legitimate apps never need this. Personal info = the real payment.</li>
+    </ul>
+    <div class="win-discuss">
+      <div class="win-discuss-title">🔐 THE BIG TAKEAWAYS</div>
+      <ul class="win-discuss">
+        <li>Use a password manager — random passwords only, never personal info</li>
+        <li>Real companies never ask for your password over text or email</li>
+        <li>Check the sender's domain before trusting any urgent email</li>
+        <li>Check app permissions and reviews before installing anything free</li>
+        <li>Verify "friend" requests through a different channel before acting</li>
+      </ul>
+    </div>
+    <button class="win-replay" onclick="location.reload()">↺ INVESTIGATE AGAIN</button>
+  </div>
+</div>
+
+<script>
+const solved = {social:false, msgs:false, email:false, df:false};
+let mqCorrect = {1:false, 2:false, 3:false};
+
+// ---- NAVIGATION ----
+function go() {
+  document.getElementById('intro').style.display='none';
+  document.getElementById('app').style.display='block';
+}
+function nav(id) {
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.sbitem').forEach(s=>s.classList.remove('active'));
+  document.getElementById('scr-'+id).classList.add('on');
+  const sb = document.getElementById('sb-'+id);
+  if(sb) sb.classList.add('active');
+  if(id==='email'){
+    document.getElementById('email-list-view').style.display='block';
+    document.querySelectorAll('.eview').forEach(v=>v.classList.remove('on'));
+  }
+  if(id==='conclusions') {
+    document.getElementById('sb-conclusions').classList.add('active');
+  }
+}
+function subNav(base, sub) {
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.getElementById('scr-'+base+'-'+sub).classList.add('on');
+  document.querySelectorAll('.sbitem').forEach(s=>s.classList.remove('active'));
+  const sb = document.getElementById('sb-'+base);
+  if(sb) sb.classList.add('active');
+}
+function showEmail(id) {
+  if(!id) {
+    document.getElementById('email-list-view').style.display='block';
+    document.querySelectorAll('.eview').forEach(v=>v.classList.remove('on'));
+    return;
+  }
+  document.getElementById('email-list-view').style.display='none';
+  document.querySelectorAll('.eview').forEach(v=>v.classList.remove('on'));
+  document.getElementById('ev-'+id).classList.add('on');
+}
+
+// ---- SOCIAL ----
+function spuzHint(n) {
+  document.querySelectorAll('[data-clue="'+n+'"]').forEach(el => {
+    el.classList.add('hl-collected');
+  });
+
+  if(n === 1) {
+    showClueToast('🐕 You spotted something! Type what you found into Clue A below.');
+    // Unlock step 1 input visually (it's already unlocked, just nudge them)
+  }
+  if(n === 5) {
+    const step2 = document.getElementById('cstep-2');
+    if(step2 && step2.classList.contains('locked')) {
+      showClueToast('#️⃣ Good eye — but collect Clue A first!');
+    } else {
+      showClueToast('#️⃣ You spotted something! Type what you found into Clue B below.');
+    }
+  }
+  if(n === 2) showClueToast('📅 Interesting — but probably not part of the password');
+  if(n === 3) showClueToast('🏡 Noted — but probably not part of the password');
+  if(n === 4) showClueToast('🐺 Good spot — but probably not part of the password');
+}
+
+function showClueToast(msg) {
+  let toast = document.getElementById('clue-toast');
+  if(!toast) {
+    toast = document.createElement('div');
+    toast.id = 'clue-toast';
+    toast.style.cssText = 'position:sticky;bottom:8px;left:8px;right:8px;background:#1877f2;color:#fff;font-size:0.75rem;font-weight:700;padding:0.55rem 0.8rem;border-radius:10px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:opacity 0.3s;z-index:99;margin:0 0.5rem 0.5rem;';
+    document.querySelector('.phone-body').appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.style.opacity = '0', 2500);
+}
+function checkCrack(step) {
+  const val = (document.getElementById('ci-'+step).value||'').trim().toLowerCase();
+  const result = document.getElementById('cr-'+step);
+  const answers = [['biscuit'], ['13'], ['biscuit13!']];
+  const ok = answers[step-1].includes(val);
+  if(ok) {
+    result.textContent = step===3
+      ? '🔓 CRACKED! Password was "Biscuit13!" — pet name + lucky number + "!" — all found from her public profile.'
+      : '✓ Correct!';
+    result.className = 'crack-result ok';
+    document.getElementById('cstep-'+step).classList.add('unlocked');
+    if(step < 3) {
+      document.getElementById('cstep-'+(step+1)).classList.remove('locked');
+      updateHint(step===1
+        ? 'Clue A found! Now read through her posts — she mentions a number that\'s really important to her. Can you find it?'
+        : 'Both clues collected! Now assemble the full password in Clue C.');
+    }
+    if(step===3) markSolved('social', 'Password "Biscuit13!" assembled from public profile: dog\'s name (bio) + jersey number (posts) + "!" suffix. Hackers run this exact process automatically.');
+  } else {
+    const wrong = [
+      '✗ Look in her bio — what\'s her dog\'s name?',
+      '✗ Check her posts — she mentions a number she calls lucky...',
+      '✗ Combine: Capitalize the name + the number + add "!" at the end'
+    ];
+    result.textContent = wrong[step-1];
+    result.className = 'crack-result no';
+  }
+}
+
+// ---- MESSAGES ----
+function pickMQ(n, el, verdict) {
+  document.getElementById('mq'+n).querySelectorAll('.mq-opt').forEach(o=>{
+    o.classList.remove('correct-pick','wrong-pick');
+  });
+  el.classList.add(verdict==='correct'?'correct-pick':'wrong-pick');
+  mqCorrect[n] = verdict==='correct';
+  if(Object.values(mqCorrect).every(Boolean)) document.getElementById('mq-submit').disabled=false;
+}
+function submitMQ() {
+  const res = document.getElementById('mq-result');
+  if(Object.values(mqCorrect).every(Boolean)) {
+    res.textContent='✅ All correct! The hacker already had Emma\'s password — they just needed that one code. Real companies send 2FA codes to YOU. They already know what they sent — they will never ask you to text it back.';
+    res.className='mq-result ok';
+    markSolved('msgs','Hacker already had the password from step 1. They tried to log in, which triggered a real 2FA code to Emma\'s phone. They impersonated FaceSpace Support and used a fake countdown to panic her into texting the code back. Account fully compromised in under 2 minutes.');
+  } else {
+    res.textContent='✗ Not all answers are correct — review your selections as a team.';
+    res.className='mq-result no';
+    mqCorrect={1:false,2:false,3:false};
+    document.getElementById('mq-submit').disabled=true;
+    ['mq1','mq2','mq3'].forEach(id=>{
+      document.getElementById(id).querySelectorAll('.mq-opt').forEach(o=>{
+        o.classList.remove('correct-pick','wrong-pick');
+      });
+    });
+  }
+}
+
+// ---- EMAIL ----
+const phishTapped = new Set();
+
+function tapPhish(id) {
+  if(phishTapped.has(id)) return;
+  phishTapped.add(id);
+  document.getElementById('ptap-'+id).classList.add('flagged');
+  document.getElementById('pcall-'+id).classList.add('show');
+  const count = phishTapped.size;
+  const prog = document.getElementById('phish-progress');
+  if(count < 3) {
+    prog.innerHTML = '<strong>' + count + ' of 3</strong> red flags found — keep looking!';
+  } else {
+    prog.innerHTML = '✅ All 3 red flags found!';
+    setTimeout(() => {
+      document.getElementById('email-final-q').classList.add('show');
+      document.getElementById('email-final-q').scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 400);
+  }
+}
+
+function answerEmailQ(btn, correct) {
+  document.querySelectorAll('.email-q-opt').forEach(b => b.disabled = true);
+  btn.classList.add(correct ? 'right' : 'wrong');
+  const res = document.getElementById('email-q-result');
+  if(correct) {
+    res.textContent = '✅ Exactly right. Never use a link from an email — always type the address yourself. That way a fake link can\'t catch you.';
+    res.className = 'email-q-result ok';
+    markSolved('email', '3 red flags found in the phishing email: fake sender domain, scary countdown, and a fake link. Emma should delete it and go to the real portal directly.');
+  } else {
+    res.textContent = '✗ Think about it — any of those actions puts Emma in the scammer\'s hands. The safest move is to never use anything in the email at all.';
+    res.className = 'email-q-result no';
+  }
+}
+
+// ---- BOPQUIZ ----
+let bqAnswered = 0;
+
+function answerBQ(qNum, btn) {
+  const card = document.getElementById('bqq-'+qNum);
+  card.querySelectorAll('.bq-opt').forEach(b => {
+    b.classList.add('disabled');
+  });
+  btn.classList.add('picked');
+  document.getElementById('bqdot-'+qNum).classList.add('done');
+  setTimeout(() => {
+    card.style.display = 'none';
+    if(qNum < 3) {
+      document.getElementById('bqq-'+(qNum+1)).style.display = 'block';
+    } else {
+      document.getElementById('bq-quiz-stage').style.display = 'none';
+      document.getElementById('bq-wall-stage').classList.add('show');
+      updateHint('Emma finished the quiz — now the app asked for personal info. Rate how risky each thing she gave away actually was.');
+      setTimeout(() => showNextRequest(), 500);
+    }
+  }, 500);
+}
+
+const bqRequests = [
+  {
+    label:'Info given 1 of 4',
+    gave:'Emma Chen', gaveLabel:'Name',
+    appReason:'App said: "To personalise your results!"',
+    fineText:'A first name feels harmless — but it\'s the start. Combined with everything else she\'ll share, a stranger is building a profile of Emma.',
+    maybeText:'Good instinct. A name alone isn\'t dangerous, but asking "why does a quiz need my real name?" is exactly the right habit.',
+    farText:'Fair call. Even a first name is the first step in building a picture of who Emma is.',
+    fineClass:'ok', maybeClass:'ok', farClass:'ok', isRedFlag:false
+  },
+  {
+    label:'Info given 2 of 4',
+    gave:'Riverdale Middle School', gaveLabel:'School',
+    appReason:'App said: "To connect you with nearby students!"',
+    fineText:'Now someone knows Emma\'s name AND where she is five days a week. A personality quiz has no reason to need her school.',
+    maybeText:'Right to hesitate. Name + school together means a stranger knows who Emma is and where to find her every day.',
+    farText:'Correct. There\'s no good reason Quizzify needs her school — that excuse doesn\'t hold up.',
+    fineClass:'warn', maybeClass:'ok', farClass:'ok', isRedFlag:false
+  },
+  {
+    label:'Info given 3 of 4',
+    gave:'14 March 2010', gaveLabel:'Date of birth',
+    appReason:'App said: "Required to enter our student prize draw!"',
+    fineText:'🚨 Red flag. Name + school + birthday is enough for someone to impersonate Emma or get into other accounts. A quiz never needs this.',
+    maybeText:'Trust that feeling — this is a clear red flag. The "prize draw" is a classic trick to get a date of birth.',
+    farText:'Exactly right. Emma\'s birthday combined with her name and school is a dangerous combination.',
+    fineClass:'bad', maybeClass:'warn', farClass:'ok', isRedFlag:true
+  },
+  {
+    label:'Info given 4 of 4',
+    gave:'12 Maple Drive, Springfield', gaveLabel:'Home address',
+    appReason:'App said: "So we can mail you a results certificate!"',
+    fineText:'🚨 This is serious. A stranger now knows exactly where Emma lives. No quiz app ever needs a home address — this is a scam.',
+    maybeText:'There\'s no maybe here. No quiz app needs to know where Emma lives, ever.',
+    farText:'Absolutely right. A free app mailing a certificate makes no sense. This was a scam from the start.',
+    fineClass:'bad', maybeClass:'bad', farClass:'ok', isRedFlag:true
+  }
+];
+
+let bqCurrentRequest = 0;
+let bqWrongVotes = 0;
+
+function showNextRequest() {
+  const req = bqRequests[bqCurrentRequest];
+  const container = document.getElementById('bq-requests');
+  const card = document.createElement('div');
+  card.className = 'bq-req-card';
+  card.id = 'bqreq-' + bqCurrentRequest;
+  const i = bqCurrentRequest;
+  card.innerHTML =
+    '<div class="bq-req-top">' +
+      '<div class="bq-req-label">' + req.label + '</div>' +
+      '<div class="bq-req-gave">' +
+        '<span class="bq-req-gave-label">' + req.gaveLabel + '</span>' +
+        '<span class="bq-req-gave-value">' + req.gave + '</span>' +
+      '</div>' +
+      '<div class="bq-req-reason">' + req.appReason + '</div>' +
+    '</div>' +
+    '<div class="bq-req-btns">' +
+      '<button class="bq-vote-btn fine"  onclick="voteRequest(' + i + ',\'fine\')">🟢 Not risky</button>' +
+      '<button class="bq-vote-btn maybe" onclick="voteRequest(' + i + ',\'maybe\')">🟡 A bit risky</button>' +
+      '<button class="bq-vote-btn far"   onclick="voteRequest(' + i + ',\'far\')">🔴 Very risky</button>' +
+    '</div>' +
+    '<div class="bq-req-reveal" id="bqrev-' + i + '"></div>';
+  container.appendChild(card);
+  setTimeout(() => card.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
+}
+
+function voteRequest(idx, vote) {
+  const req = bqRequests[idx];
+  const card = document.getElementById('bqreq-'+idx);
+  const bgMap   = {fine:'#f5f3ff', maybe:'#fffbeb', far:'#fef2f2'};
+  const colMap  = {fine:'#7c3aed', maybe:'#d97706', far:'#dc2626'};
+  card.querySelectorAll('.bq-vote-btn').forEach(b => {
+    b.disabled = true;
+    if(b.classList.contains(vote)) {
+      b.style.background = bgMap[vote];
+      b.style.color = colMap[vote];
+    }
+  });
+  if(req.isRedFlag && vote === 'fine') bqWrongVotes++;
+  const rev = document.getElementById('bqrev-'+idx);
+  const textMap  = {fine:req.fineText,  maybe:req.maybeText,  far:req.farText};
+  const classMap = {fine:req.fineClass, maybe:req.maybeClass, far:req.farClass};
+  rev.textContent = textMap[vote];
+  rev.className   = 'bq-req-reveal ' + classMap[vote];
+  rev.style.display = 'block';
+  bqCurrentRequest++;
+  if(bqCurrentRequest < bqRequests.length) {
+    setTimeout(() => showNextRequest(), 950);
+  } else {
+    setTimeout(() => showBQFinal(), 700);
+  }
+}
+
+function showBQFinal() {
+  const container = document.getElementById('bq-requests');
+  const el = document.createElement('div');
+  el.style.cssText = 'background:#fff;border-radius:14px;padding:1rem;box-shadow:0 2px 10px rgba(0,0,0,0.08);';
+  const perfect = bqWrongVotes === 0;
+  el.innerHTML =
+    '<div style="font-size:1.5rem;text-align:center;margin-bottom:0.4rem;">' + (perfect?'🎉':'🤔') + '</div>' +
+    '<div style="font-weight:800;font-size:0.88rem;color:#1a1a1a;text-align:center;margin-bottom:0.45rem;">' +
+      (perfect ? 'Sharp instincts — app busted!' : 'Watch out for the creep!') +
+    '</div>' +
+    '<div style="font-size:0.77rem;color:#444;line-height:1.6;margin-bottom:0.65rem;">' +
+      (perfect
+        ? 'You caught every red flag. Scam apps start with small, reasonable requests so you get comfortable saying yes — then sneak in the dangerous ones.'
+        : 'This trick is called "the creep." Each request seems small, so you say yes. By the end, a stranger has your name, school, birthday, and address.') +
+    '</div>' +
+    '<div style="font-size:0.75rem;font-weight:700;color:#5b21b6;background:#f5f3ff;border-radius:8px;padding:0.6rem 0.75rem;line-height:1.55;">' +
+      '🔒 Rule: always ask <em>why does this app actually need this?</em> If the answer isn\'t obvious — don\'t share it.' +
+    '</div>';
+  container.appendChild(el);
+  setTimeout(() => el.scrollIntoView({behavior:'smooth', block:'nearest'}), 50);
+  document.getElementById('bq-done-btn').style.display = 'block';
+}
+
+function solveDF() {
+  markSolved('df','Quizzify started fun then escalated — name, school, birthday, home address to "unlock" results. Scam apps build trust with small requests before asking for dangerous info.');
+  setTimeout(() => nav('home'), 300);
+}
+
+// ---- CONCLUSIONS ----
+let concAnswered = 0;
+const concReveals = [
+  '', // index 0 unused
+  'Correct. The password "Biscuit13!" used her dog\'s name from her bio and her jersey number from her posts — all publicly visible. This is called a dictionary attack using personal info.',
+  'Correct. The 2FA code is the second lock on the door. Once the hacker had the password, that code was all that stood between them and Emma\'s account.',
+  'Correct. The sender\'s domain is always the most reliable tell. Scammers can fake a name and subject line — but they can\'t send from the real school\'s domain.',
+  'Correct. Almost everything that happened to Emma came from oversharing — a public profile, personal passwords, trusting unverified messages. One habit of pausing to ask "who could use this against me?" changes everything.'
+];
+const concWrongReveals = [
+  '',
+  'Not quite. The hacker used info Emma posted publicly — her dog\'s name and lucky number. They didn\'t need to guess randomly or hack servers.',
+  'Not quite. The timing didn\'t matter. The hacker already had her password — the code was the one thing blocking them, and Emma handed it over.',
+  'Not quite. Spelling and caps don\'t reliably reveal phishing. The sender\'s email domain is the clearest giveaway — it wasn\'t @riverdale.edu.',
+  'Not quite. Avoiding social media entirely or changing passwords constantly aren\'t realistic. The key habit is pausing before sharing anything to ask who could misuse it.'
+];
+
+function navConclusions() {
+  const allDone = Object.values(solved).every(Boolean);
+  if(!allDone) {
+    updateHint('Complete all 4 challenges first to unlock the Case Report app.');
+    return;
+  }
+  nav('conclusions');
+}
+
+function answerConc(qNum, btn, correct) {
+  const card = document.getElementById('concq-'+qNum);
+  card.querySelectorAll('.conc-opt').forEach(b => b.classList.add('disabled'));
+  btn.classList.add(correct ? 'right' : 'wrong');
+  const rev = document.getElementById('concrev-'+qNum);
+  rev.textContent = correct ? concReveals[qNum] : concWrongReveals[qNum];
+  rev.className = 'conc-reveal show' + (correct ? '' : ' wrong-reveal');
+  concAnswered++;
+  if(qNum < 4) {
+    setTimeout(() => {
+      const next = document.getElementById('concq-'+(qNum+1));
+      next.classList.remove('locked');
+      next.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 800);
+  } else {
+    setTimeout(() => {
+      document.getElementById('conc-final').style.display = 'block';
+      document.getElementById('conc-final').scrollIntoView({behavior:'smooth', block:'nearest'});
+    }, 800);
+  }
+}
+
+function showWin() {
+  document.getElementById('sb-conclusions').classList.add('done');
+  document.getElementById('win-overlay').classList.add('show');
+}
+function markSolved(key, detail) {
+  if(solved[key]) return;
+  solved[key]=true;
+  const map={social:1, msgs:2, email:3, df:4};
+  const n=map[key];
+
+  document.getElementById('nb'+n).classList.add('found');
+  document.getElementById('nb'+n+'-body').textContent=detail;
+  document.getElementById('d'+n).classList.add('lit');
+
+  // Show huddle modal
+  const huddles = {
+    social: { q: '"What other things might someone post about on social media that they\'re also using in their password?"' },
+    msgs:   { q: '"If an app texts you a login code, why would you NEVER send that code to anyone — even someone claiming to be from that app?"' },
+    email:  { q: '"What\'s the safest thing to do when you get an urgent email asking you to click a link?"' },
+    df:     { q: '"Before downloading a free app, what are two things you should always check first?"' }
+  };
+  const h = huddles[key];
+  if(h) {
+    document.getElementById('huddle-modal-q').textContent = h.q;
+    setTimeout(() => document.getElementById('huddle-modal').classList.add('show'), 600);
+  }
+
+  const sbKeys={social:'social', msgs:'msgs', email:'email', df:'df'};
+  const sbEl=document.getElementById('sb-'+sbKeys[key]);
+  if(sbEl) sbEl.classList.add('done');
+
+  // Show return-to-home button in the relevant app
+  const homeBtn = document.getElementById('home-btn-'+key);
+  if(homeBtn) homeBtn.classList.add('show');
+
+  const count=Object.values(solved).filter(Boolean).length;
+  document.getElementById('progbar').style.width=(count*25)+'%';
+  document.getElementById('progtxt').textContent=count+' / 4 solved';
+
+  const hints={
+    social:'✓ Done! Discuss the Team Huddle, then open Messages → "FaceSpace Support" for Challenge 2.',
+    msgs:'✓ Done! Discuss the Team Huddle, then open Gmail for Challenge 3.',
+    email:'✓ Done! Discuss the Team Huddle, then open Quizzify for Challenge 4.',
+    df:'🎉 All 4 done! Discuss the Team Huddle — then the Case Report app is now unlocked on the home screen!'
+  };
+  updateHint(hints[key]);
+
+  if(count===4) {
+    // Unlock the conclusions app
+    const icon = document.getElementById('sb-conc-icon');
+    const name = document.getElementById('sb-conc-name');
+    const sub  = document.getElementById('sb-conc-sub');
+    const homeIcon = document.getElementById('conc-icon-face');
+    const homeLbl  = document.getElementById('conc-icon-lbl');
+    if(icon) icon.textContent = '📋';
+    if(name) { name.textContent = 'Case Report'; name.style.color = ''; }
+    if(sub)  sub.textContent = 'Final assessment';
+    if(homeIcon) { homeIcon.textContent = '📋'; homeIcon.style.background = 'linear-gradient(135deg,#0f172a,#1e3a5f)'; }
+    if(homeLbl)  { homeLbl.style.opacity = '1'; }
+  }
+}
+
+function dismissHuddle() {
+  document.getElementById('huddle-modal').classList.remove('show');
+}
+
+function updateHint(t) {
+  document.getElementById('hinttxt').textContent=t;
+}
+</script>
+</body>
+</html>
